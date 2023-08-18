@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: "richard.js",
   description: "The richest component framework",
+  base: '/richard.js/',
   themeConfig: {
     logo: { src: '/crown.svg', width: 24, height: 24 },
     // https://vitepress.dev/reference/default-theme-config
