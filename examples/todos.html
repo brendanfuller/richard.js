@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>richard.js</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <!-- this is the root component -->
+    <template id="root">
+      <div class="container">
+        <br />
+        <h1>Todo List via richard.js</h1>
+        <br />
+
+        <div class="row g-3 mb-3">
+          <div class="col-auto">
+           
+            <input
+              placeholder="Enter a todo item"
+              class="form-control"
+              name="todo"
+              r-event-input="setTodo"
+              r-event-keyup="setTodoInput"
+              type="text"
+              r-value="currentTodo"
+            />
+          </div>
+          <div class="col-auto">
+            <button
+              r-event-click="addItem"
+              r-disable="#disabled"
+              type="button"
+              class="btn btn-primary"
+            >
+              Add
+            </button>
+          </div>
+          <div class="col-auto">
+            <button
+              r-event-click="clearModalOpen"
+              type="button"
+              class="btn btn-info"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+
+        <!-- the item is the key while the items is the list-->
+        <ul r-for="items" r-value="item" class="list-group">
+          <li
+            class="list-group-item d-flex justify-content-between align-items-center"
+          >
+            <div class="flex-grow-1" style="margin-right: 20px">
+              <div r-if-not="$item.edit" class="d-flex">
+                <div r-if-not="$item.check">
+                  <input
+                    id="flexCheckDefault"
+                    class="form-check-input"
+                    type="checkbox"
+                    value=""
+                    r-event-click="checkItem"
+                    type="text"
+                    r-params="$item"
+                    r-value="$item.check"
+                  />
+                  <label class="form-check-label" for="flexCheckDefault">
+                    <span r-ref="$item.value" style="font-weight: bold;"></span>
+                  </label>
+                </div>
+                <div class="form-check" r-if="$item.check">
+                  <input
+                    id="flexCheckDefault"
+                    class="form-check-input"
+                    type="checkbox"
+                    value=""
+                    r-event-click="checkItem"
+                    type="text"
+                    r-params="$item"
+                    r-value="$item.check"
+                  />
+                  <label class="form-check-label" for="flexCheckDefault">
+                    <span
+                      r-ref="$item.value"
+                      style="text-decoration: line-through;"
+                    ></span>
+                  </label>
+                </div>
+              </div>
+
+              <div r-if="$item.edit" class="form-outline w-100">
+                <input
+                  placeholder="Enter a todo item"
+                  class="form-control"
+                  name="todo"
+                  r-event-input="editItem"
+                  type="text"
+                  r-params="$item"
+                  r-value="$item.value"
+                />
+              </div>
+            </div>
+            <div>
+              <button
+                r-event-click="setEditMode"
+                r-params="$item"
+                class="btn btn-primary"
+              >
+                <div r-if="$item.edit">
+                  <span>Save</span>
+                </div>
+
+                <div r-if-not="$item.edit">
+                  <span>Edit</span>
+                </div>
+              </button>
+              <button
+                r-event-click="onDeleteItem"
+                r-params="$item"
+                class="btn btn-danger"
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        </ul>
+
+        <div r-if="#isEmpty">
+          <p style="font-weight: bold">There are no items</p>
+        </div>
+
+        <div r-if="#showConfirmModal">
+          <div
+            class="modal fade show"
+            id="exampleModalLive"
+            tabindex="-1"
+            aria-labelledby="exampleModalLiveLabel"
+            style="display: block"
+            aria-modal="true"
+            role="dialog"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h1 class="modal-title fs-5" id="exampleModalLiveLabel">
+                    Clear all items
+                  </h1>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    r-event-click="clearModalClose"
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <p>Are you sure you want to clear the list?</p>
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-danger"
+                    r-event-click="clearItems"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    r-event-click="clearModalClose"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-backdrop fade show"></div>
+        </div>
+        </div>
+
+      <script>
+        state((props) => {
+          return {
+            clearConfirm: false,
+            currentTodo: "",
+            items: JSON.parse(sessionStorage.getItem("todos")) || [],
+          };
+        });
+
+        const save = (state) => {
+          sessionStorage.setItem("todos", JSON.stringify(state));
+        };
+
+        //The events
+        events({
+          addItem: ({ event, state, setState, props }) => {
+            //Make sure we have a todo item to add
+            if (state.currentTodo != "") {
+              //Add the item to the list
+              setState({
+                ...state,
+                items: [
+                  { value: state.currentTodo, edit: false, check: false },
+                  ...state.items,
+                ],
+                currentTodo: "", //Reset the current todo value
+              });
+              save([{ value: state.currentTodo, edit: false }, ...state.items]);
+            }
+          },
+          setEditMode: ({ event, state, setState, props }, item, index) => {
+            const changes = {
+              ...state,
+              items: state.items.map((item, i) => {
+                if (i === index) {
+                  return { ...item, edit: !item.edit };
+                } else {
+                  return item;
+                }
+              }),
+            };
+            setState(changes);
+            save(changes.items);
+          },
+          editItem: ({ event, state, setState, props }, item, index) => {
+            //Make sure we have a todo item to add
+            if (event.target.value != "") {
+              //Add the item to the list
+
+              setState({
+                ...state,
+                items: state.items.map((item, i) => {
+                  if (i === index) {
+                    return { ...item, value: event.target.value };
+                  } else {
+                    return item;
+                  }
+                }),
+              });
+            }
+          },
+          checkItem: ({ event, state, setState, props }, item, index) => {
+            //alert("Checking!");
+            const changes = {
+              ...state,
+              items: state.items.map((item, i) => {
+                if (i === index) {
+                  return { ...item, check: !item.check };
+                } else {
+                  return item;
+                }
+              }),
+            };
+            setState(changes);
+            save(changes.items);
+          },
+          setTodo: ({ event, state, setState, props }) => {
+            setState({
+              ...state,
+              currentTodo: event.target.value,
+            });
+          },
+          setTodoInput: ({ event, state, setState, props, events }) => {
+            if (event.key == "Enter") {
+              events.addItem({ event, state, setState, events, props });
+            }
+          },
+          onDeleteItem: (
+            { event, state, setState, props },
+            itemToDelete,
+            index
+          ) => {
+            const changes = {
+              ...state,
+              items: state.items.filter((item, i) => i !== index),
+            };
+            setState(changes);
+            save(changes.items);
+          },
+          clearItems: ({ event, state, setState, props }) => {
+            setState({
+              ...state,
+              items: [],
+              clearConfirm: false,
+            });
+            document.body.classList.remove("modal-open");
+          },
+          clearModalOpen: ({ event, state, setState, props }) => {
+            setState({
+              ...state,
+              clearConfirm: true,
+            });
+
+            document.body.classList.add("modal-open");
+          },
+          clearModalClose: ({ event, state, setState, props }) => {
+            setState({
+              ...state,
+              clearConfirm: false,
+            });
+
+            document.body.classList.remove("modal-open");
+          },
+        });
+
+        computed({
+          //Is the list of todos empty?
+          isEmpty: ({ state, props }) => {
+            return state.items.length === 0;
+          },
+          showConfirmModal: ({ state, props }) => {
+            return state.clearConfirm;
+          },
+          //Do we have any message for todos?
+          disabled: ({ state, props }) => {
+            return state.currentTodo === "";
+          },
+        });
+      </script>
+    </template>
+
+
+
+    <!-- Load the root template into this -->
+    
+    <div id="ok"></div>
+    <script src="../richard.js"></script>
+    <script>
+      //render("root", document.querySelector("#app"));
+      render("root", document.querySelector("#ok"));
+    </script>
+  </body>
+</html>
