@@ -23,7 +23,7 @@
 
 # Example
 
-A simple example of input state teleportation in the spatial dimension with richard. [Demo](https://richard.js.org/demo/input)
+A simple example of input state teleportation in the spatial dimension with richard. [Demo](https://stackblitz.com/edit/input-example-richard-js?file=index.html)
 
 ```html
 <body>
