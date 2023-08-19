@@ -210,8 +210,9 @@
                   ...state.items,
                 ],
                 currentTodo: "", //Reset the current todo value
+    
               });
-              save([{ value: state.currentTodo, edit: false }, ...state.items]);
+              save([{ value: state.currentTodo, edit: false, check: false }, ...state.items]);
             }
           },
           setEditMode: ({ event, state, setState, props }, item, index) => {
@@ -290,6 +291,7 @@
               clearConfirm: false,
             });
             document.body.classList.remove("modal-open");
+            save([]);
           },
           clearModalOpen: ({ event, state, setState, props }) => {
             setState({
