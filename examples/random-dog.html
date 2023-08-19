@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>richard.js</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <!-- this is the root component -->
+    <template id="root">
+      <div class="container">
+        <br />
+        <h1>Input Example via richard.js</h1>
+        <br />
+
+        <br />
+        <div r-if-not="#isLoading">
+          <img r-value="url" width="300" height="300"/>
+          <button
+              r-event-click="newDog"
+              r-disable="#disabled"
+              type="button"
+              class="btn btn-primary"
+            >
+              Generate
+            </button>
+        </div>
+        <div r-if="#isLoading">
+          <div>Loading</div>
+        </div>
+        <!-- Name would be set here -->
+       
+      </div>
+      <script>
+        async function getWoof() {
+          const response = await fetch("https://random.dog/woof.json?filter=mp4,webm");
+          const myJson = await response.json(); //extract JSON from the http response
+          return myJson;
+        }
+
+        state((props) => {
+          //sconst value = await getWoof()
+          //console.log(value)
+          return {
+            loading: true,
+            url: null,
+          };
+        });
+
+        events({
+          newDog: async ({ event, state, setState, props }) => {
+            setState({
+              loading: true,
+              
+            });
+            const woof = await getWoof();
+            setState({
+              loading: false,
+              url: woof.url,
+            });
+          },
+        });
+        computed({
+          name: ({ state, props }) => {
+            return state.name;
+          },
+          isLoading: ({ state, props }) => {
+            return state.loading;
+          },
+        });
+        mount(async ({ setState }) => {
+          const value = await getWoof();
+          console.log(value);
+          setState({
+
+            url: value.url,
+          });
+        });
+      </script>
+    </template>
+    <!-- Load the root template into this -->
+    <div id="app"></div>
+    <script src="../richard.js"></script>
+    <script>
+      render("root", document.querySelector("#app"));
+    </script>
+  </body>
+</html>
