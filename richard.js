@@ -16,16 +16,19 @@ document.addEventListener("DOMContentLoaded", function (event) {
     if (node.nodeName == "#text") {
       template.content.appendChild(node.cloneNode(true));
     } else if (node.nodeName === "SCRIPT") {
-      node.innerHTML = `(() => {const _ = "${name}";
-       function state(original) {
-         components[_].defaultState = original;
+      node.innerHTML = `(async () => {const _ = "${name}";
+       function state(o) {
+         components[_].defaultState = o;
        }
-       function events(events) {
-         components[_].events = events;
+       function events(e) {
+         components[_].events = e;
        };
-       function computed(computed) {
-         components[_].computed = computed;
+       function computed(c) {
+         components[_].computed = c;
        };
+       function mount(m) {
+        components[_].mount = m;
+      };
        ${node.innerHTML}})()`;
       const body = document.querySelector("body");
       body.appendChild(node);
@@ -86,10 +89,18 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
           }
 
+
+          console.log(element.nodeName)
+
+
           if (element.getAttribute("type") == "checkbox") {
             //console.log("It's a checkbox");
             const currentValue = element.checked;
             if (currentValue != elementValue) element.checked = elementValue;
+          } else if (element.nodeName == "IMG") {
+            //console.log("It's a image");
+            const currentValue = element.src;
+            if (currentValue != elementValue) element.src = elementValue;
           } else {
             const currentValue = element.value;
             if (currentValue != elementValue) element.value = elementValue;
@@ -328,6 +339,19 @@ document.addEventListener("DOMContentLoaded", function (event) {
           ...components[component].defaultState({}),
         };
         renderChildren(id, component, root);
+        mountComponent(id, component);
+      }
+
+      async function mountComponent(id, component) {
+        try {
+          components[component].mount({
+            setState: (newState) => {
+              updateState(id, component, newState);
+            },
+          });
+        } catch (e) {
+          console.error(e);
+        }
       }
 
       function renderChildren(id, component, root) {
@@ -365,7 +389,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
               child.nodeName === "TEXTAREA" ||
               child.nodeName === "SELECT" ||
               child.nodeName === "CHECKBOX" ||
-              child.nodeName === "RADIO"
+              child.nodeName === "RADIO" ||
+              child.nodeName == "IMG" 
             ) {
               const node = $(child);
               const rValue = node.attr("r-value").split(".");
